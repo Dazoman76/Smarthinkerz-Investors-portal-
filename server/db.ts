@@ -270,4 +270,8 @@ export async function getAuditLogs(limit = 50): Promise<InsertAuditLog[]> {
 // ANALYTICS
 // ============================================
 
-export async function getAnalyticsSummary(): Promise<Insert
+export async function getAnalyticsSummary(): Promise<InsertAnalyticsEvent[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(analyticsEvents);
+}
