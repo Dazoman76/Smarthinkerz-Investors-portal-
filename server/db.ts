@@ -1,4 +1,4 @@
-import { eq, desc, and, sql, or, like } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { 
@@ -25,7 +25,7 @@ export async function getDb() {
     try {
       _pool = new pg.Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }, // Required for Render Postgres
+        ssl: { rejectUnauthorized: false }, // Required for Render/Neon Postgres
       });
       _db = drizzle(_pool);
     } catch (error) {
@@ -96,6 +96,46 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// CONTENT BLOCKS
+// ============================================
+
+export async function getContentBlock(blockKey: string): Promise<ContentBlock | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot fetch content block: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(contentBlocks)
+      .where(eq(contentBlocks.blockKey, blockKey))
+      .limit(1);
+
+    return result[0] ?? null;
+  } catch (error) {
+    console.error("[Database] Failed to get content block:", error);
+    throw error;
+  }
+}
+
+export async function createContentBlock(block: InsertContentBlock): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create content block: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(contentBlocks).values(block);
+  } catch (error) {
+    console.error("[Database] Failed to create content block:", error);
     throw error;
   }
 }
