@@ -34,6 +34,44 @@ export async function getDb() {
   }
   return _db;
 }
+// NOTIFICATIONS
+export async function markNotificationRead(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notifications)
+    .set({ read: true, updatedAt: new Date() })
+    .where(eq(notifications.id, id));
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notifications)
+    .set({ read: true, updatedAt: new Date() })
+    .where(eq(notifications.userId, userId));
+}
+
+// USERS
+export async function updateUserRole(userId: string, role: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users)
+    .set({ role, updatedAt: new Date() })
+    .where(eq(users.openId, userId));
+}
+
+// SCHEDULED PUBLISHING
+export async function createScheduledPublish(pub: InsertScheduledPublishing): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(scheduledPublishing).values({ ...pub, createdAt: new Date() });
+}
+
+export async function getPendingScheduledPublishes(): Promise<InsertScheduledPublishing[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(scheduledPublishing).where(eq(scheduledPublishing.status, "pending"));
+}
 
 // ============================================
 // USER MANAGEMENT
