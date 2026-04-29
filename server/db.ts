@@ -126,6 +126,25 @@ export async function getContentBlock(blockKey: string): Promise<ContentBlock | 
   }
 }
 
+export async function getAllContentBlocks(status?: string): Promise<ContentBlock[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot fetch all content blocks: database not available");
+    return [];
+  }
+
+  try {
+    const query = db.select().from(contentBlocks);
+    if (status) {
+      return await query.where(eq(contentBlocks.status, status));
+    }
+    return await query;
+  } catch (error) {
+    console.error("[Database] Failed to get all content blocks:", error);
+    throw error;
+  }
+}
+
 export async function createContentBlock(block: InsertContentBlock): Promise<void> {
   const db = await getDb();
   if (!db) {
@@ -137,6 +156,50 @@ export async function createContentBlock(block: InsertContentBlock): Promise<voi
     await db.insert(contentBlocks).values(block);
   } catch (error) {
     console.error("[Database] Failed to create content block:", error);
+    throw error;
+  }
+}
+
+export async function updateContentBlock(
+  blockId: number,
+  updates: Partial<InsertContentBlock>,
+  userId: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update content block: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(contentBlocks)
+      .set({ ...updates, updatedBy: userId, updatedAt: new Date() })
+      .where(eq(contentBlocks.id, blockId));
+  } catch (error) {
+    console.error("[Database] Failed to update content block:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+export async function createAuditLog(log: InsertAuditLog): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create audit log: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(auditLogs).values({
+      ...log,
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error("[Database] Failed to create audit log:", error);
     throw error;
   }
 }
