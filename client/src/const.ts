@@ -15,3 +15,6 @@ export const getLoginUrl = () => {
 
   return url.toString();
 };
+
+// Backend API URL (points to Render service)
+export const API_URL = import.meta.env.VITE_API_URL;
