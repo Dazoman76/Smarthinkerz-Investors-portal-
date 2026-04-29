@@ -150,6 +150,35 @@ export async function getAllInvestors(): Promise<Investor[]> {
   return await db.select().from(investors);
 }
 
+export async function rejectInvestor(id: number, notes: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(investors)
+    .set({ status: "rejected", rejectionNotes: notes, updatedAt: new Date() })
+    .where(eq(investors.id, id));
+}
+
+export async function updateInvestor(
+  id: number,
+  updates: Partial<Omit<InsertInvestor, 'id'>>
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(investors)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(investors.id, id));
+}
+
+// ============================================
+// DOCUMENTS
+// ============================================
+
+export async function getAllDocuments(): Promise<InsertInvestorDocument[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(investorDocuments);
+}
+
 // ============================================
 // AUDIT LOGS
 // ============================================
