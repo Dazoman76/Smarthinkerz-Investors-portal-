@@ -275,3 +275,53 @@ export async function getAnalyticsSummary(): Promise<InsertAnalyticsEvent[]> {
   if (!db) return [];
   return await db.select().from(analyticsEvents);
 }
+
+export async function getAnalytics(limit = 100): Promise<InsertAnalyticsEvent[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(analyticsEvents).orderBy(analyticsEvents.createdAt).limit(limit);
+}
+
+// ============================================
+// MEDIA LIBRARY (extra functions)
+// ============================================
+
+export async function getMediaById(id: number): Promise<InsertMediaLibrary | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(mediaLibrary).where(eq(mediaLibrary.id, id)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function createMedia(media: InsertMediaLibrary): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(mediaLibrary).values({ ...media, createdAt: new Date() });
+}
+
+export async function updateMedia(
+  id: number,
+  updates: Partial<Omit<InsertMediaLibrary, 'id'>>
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mediaLibrary)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(mediaLibrary.id, id));
+}
+
+export async function deleteMedia(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(mediaLibrary).where(eq(mediaLibrary.id, id));
+}
+
+// ============================================
+// USER NOTIFICATIONS
+// ============================================
+
+export async function getUserNotifications(userId: string): Promise<InsertNotification[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(notifications).where(eq(notifications.userId, userId));
+}
