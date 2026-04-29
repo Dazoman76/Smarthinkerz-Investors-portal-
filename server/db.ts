@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { desc, and, or, like, sql } from "drizzle-orm/expressions";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { 
