@@ -179,6 +179,30 @@ export async function getAllDocuments(): Promise<InsertInvestorDocument[]> {
   return await db.select().from(investorDocuments);
 }
 
+export async function getDocumentById(id: number): Promise<InsertInvestorDocument | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(investorDocuments).where(eq(investorDocuments.id, id)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function createDocument(doc: InsertInvestorDocument): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(investorDocuments).values({ ...doc, createdAt: new Date() });
+}
+
+export async function updateDocument(
+  id: number,
+  updates: Partial<Omit<InsertInvestorDocument, 'id'>>
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(investorDocuments)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(investorDocuments.id, id));
+}
+
 // ============================================
 // AUDIT LOGS
 // ============================================
