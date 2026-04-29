@@ -150,11 +150,26 @@ export async function getAllInvestors(): Promise<Investor[]> {
   return await db.select().from(investors);
 }
 
+export async function getInvestorById(id: number): Promise<Investor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(investors).where(eq(investors.id, id)).limit(1);
+  return result[0] ?? null;
+}
+
 export async function rejectInvestor(id: number, notes: string): Promise<void> {
   const db = await getDb();
   if (!db) return;
   await db.update(investors)
     .set({ status: "rejected", rejectionNotes: notes, updatedAt: new Date() })
+    .where(eq(investors.id, id));
+}
+
+export async function approveInvestor(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(investors)
+    .set({ status: "approved", updatedAt: new Date() })
     .where(eq(investors.id, id));
 }
 
@@ -203,6 +218,38 @@ export async function updateDocument(
     .where(eq(investorDocuments.id, id));
 }
 
+export async function deleteDocument(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(investorDocuments).where(eq(investorDocuments.id, id));
+}
+
+export async function getDocumentAccessLogs(documentId: number): Promise<InsertDocumentAccessLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(documentAccessLogs).where(eq(documentAccessLogs.documentId, documentId));
+}
+
+// ============================================
+// MEDIA LIBRARY
+// ============================================
+
+export async function getAllMedia(): Promise<InsertMediaLibrary[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(mediaLibrary);
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+export async function createNotification(note: InsertNotification): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(notifications).values({ ...note, createdAt: new Date() });
+}
+
 // ============================================
 // AUDIT LOGS
 // ============================================
@@ -222,9 +269,3 @@ export async function getAuditLogs(limit = 50): Promise<InsertAuditLog[]> {
 // ============================================
 // ANALYTICS
 // ============================================
-
-export async function getAnalyticsSummary(): Promise<InsertAnalyticsEvent[]> {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(analyticsEvents);
-}
