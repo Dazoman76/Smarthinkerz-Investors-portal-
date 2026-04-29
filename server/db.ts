@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { desc, and, or, like, sql } from "drizzle-orm/expressions";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { 
@@ -53,9 +52,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
+    const values: InsertUser = { openId: user.openId };
     const updateSet: Record<string, unknown> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
@@ -134,11 +131,10 @@ export async function getAllContentBlocks(status?: string): Promise<ContentBlock
   }
 
   try {
-    const query = db.select().from(contentBlocks);
     if (status) {
-      return await query.where(eq(contentBlocks.status, status));
+      return await db.select().from(contentBlocks).where(eq(contentBlocks.status, status));
     }
-    return await query;
+    return await db.select().from(contentBlocks);
   } catch (error) {
     console.error("[Database] Failed to get all content blocks:", error);
     throw error;
@@ -162,7 +158,7 @@ export async function createContentBlock(block: InsertContentBlock): Promise<voi
 
 export async function updateContentBlock(
   blockId: number,
-  updates: Partial<InsertContentBlock>,
+  updates: Partial<Omit<InsertContentBlock, 'id' | 'blockKey'>>,
   userId: string
 ): Promise<void> {
   const db = await getDb();
